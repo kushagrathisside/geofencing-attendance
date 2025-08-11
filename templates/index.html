@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Attendance</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        body { max-width: 720px; margin: 2rem auto; }
+        #status { font-style: italic; color: #555; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+</head>
+<body>
+    <h1>Course Attendance</h1>
+    <p>Please fill out your details to mark your attendance for today.</p>
+
+    <form id="attendanceForm" action="/submit" method="post">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+        
+        <label for="roll_no">Roll No.</label>
+        <input type="text" id="roll_no" name="roll_no" required>
+        
+        <label for="comments">Comments (Optional)</label>
+        <textarea id="comments" name="comments" rows="3"></textarea>
+
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <input type="hidden" id="fingerprint" name="fingerprint">
+
+        <button type="submit" id="submitBtn">Mark My Attendance</button>
+    </form>
+    
+    <p id="status"></p>
+
+    <script>
+        const attendanceForm = document.getElementById('attendanceForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusEl = document.getElementById('status');
+        const fingerprintInput = document.getElementById('fingerprint');
+
+        const fpPromise = FingerprintJS.load();
+
+        attendanceForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            submitBtn.disabled = true;
+            statusEl.textContent = '⏳ Verifying device and getting location... Please approve the request.';
+
+            try {
+                const fp = await fpPromise;
+                const result = await fp.get();
+                fingerprintInput.value = result.visitorId;
+                
+                if (!navigator.geolocation) {
+                   statusEl.textContent = '❌ Geolocation is not supported by your browser.';
+                   submitBtn.disabled = false;
+                } else {
+                   navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true });
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ Could not analyze device. Please try again.';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function success(position) {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+            statusEl.innerHTML = `✅ Location captured! Submitting...`;
+            attendanceForm.submit();
+        }
+
+        function error() {
+            statusEl.textContent = '❌ Unable to retrieve your location. Please enable location services in your browser/OS and try again.';
+            submitBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>
