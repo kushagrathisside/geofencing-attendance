@@ -1,4 +1,4 @@
-# Course Attendance System
+# GeoFencing Attendance - Course Attendance System
 
 A lightweight, secure, and extensible web-based attendance system built using Flask. The system leverages device fingerprinting and geolocation-based validation to ensure authenticity and prevent duplicate submissions.
 
