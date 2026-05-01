@@ -25,7 +25,10 @@ class _InstructorHomeState extends State<InstructorHome> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       _sessions = await ApiService.listSessions();
     } catch (e) {
@@ -41,7 +44,8 @@ class _InstructorHomeState extends State<InstructorHome> {
       backgroundColor: const Color(0xFF0F0F11),
       appBar: AppBar(
         backgroundColor: const Color(0xFF18181C),
-        title: const Text('Sessions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        title: const Text('Sessions',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load),
         ],
@@ -77,7 +81,7 @@ class _InstructorHomeState extends State<InstructorHome> {
       return Center(
         child: Text('No sessions yet.\nTap + to create one.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.4))),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
       );
     }
     return RefreshIndicator(
@@ -125,19 +129,28 @@ class _SessionTile extends StatelessWidget {
               margin: const EdgeInsets.only(right: 14),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: session.isActive ? const Color(0xFF4ADE80) : Colors.white24,
+                color:
+                    session.isActive ? const Color(0xFF4ADE80) : Colors.white24,
               ),
             ),
             Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(session.courseName,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-                const SizedBox(height: 3),
-                Text(
-                  '${session.id}  ·  ${session.createdAt.substring(0, 10)}',
-                  style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.white.withOpacity(0.4)),
-                ),
-              ]),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(session.courseName,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white)),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${session.id}  ·  ${session.createdAt.substring(0, 10)}',
+                      style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.4)),
+                    ),
+                  ]),
             ),
             const Icon(Icons.chevron_right_rounded, color: Colors.white24),
           ]),

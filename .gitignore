@@ -1,0 +1,119 @@
+# OS files
+
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE / editors
+
+.vscode/
+.vscode-test/
+.idea/
+**/.idea/
+*.iml
+*.swp
+*.swo
+*~
+*.code-workspace
+
+# Local agent state
+
+.codex/
+
+# Environment & secrets
+
+.env
+.env.*
+*.env.local
+*.env.development
+*.env.production
+*.pem
+*.key
+*.crt
+secrets.json
+config.local.*
+flask_api/.env
+flask_api/certs/
+
+# Python cache and builds
+
+**pycache**/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# Virtual environments
+
+venv/
+.venv/
+flask_api/venv/
+flask_api/.venv/
+
+# Testing / coverage
+
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Databases
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and temp files
+
+*.log
+logs/
+tmp/
+temp/
+
+# Generated CSV exports
+
+attendance*.csv
+flutter_app/attendance.csv
+
+# Flutter / Dart
+
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/build/
+flutter_app/linux/flutter/ephemeral/
+flutter_app/.packages
+flutter_app/*.log
+flutter_app/*flutter*.log
+
+# Keep this for apps (do NOT ignore)
+
+# flutter_app/pubspec.lock
+
+# Node (if used)
+
+node_modules/
+package-lock.json
+yarn.lock
+
+# Docker override
+
+docker-compose.override.yml
+
+# Local notes
+
+versions/
+
+# Extra safety for build folders anywhere
+
+**/build/
+
+# Optional: ignore local scripts
+
+# *.sh

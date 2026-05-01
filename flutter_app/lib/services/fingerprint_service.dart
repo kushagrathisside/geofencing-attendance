@@ -4,8 +4,7 @@
 // On web: uses browser user-agent + screen size hash.
 // On mobile: uses Android ID or iOS identifierForVendor.
 
-import 'dart:convert';
-import 'package:crypto/crypto.dart' show sha256; // add crypto: ^3.0.3 if using
+// add crypto: ^3.0.3 if using
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 

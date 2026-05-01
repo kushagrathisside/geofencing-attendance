@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Host-Networked Gateway
+  proxy:
+    image: nginx:alpine
+    container_name: cisco_proxy
+    profiles:
+      - proxy
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/ssl/certs:ro
+    depends_on:
+      - api
+
+  # Compute Layer
+  api:
+    build: 
+      context: .
+      args:
+        HTTP_PROXY: "${BUILD_HTTP_PROXY:-}"
+        HTTPS_PROXY: "${BUILD_HTTPS_PROXY:-}"
+        NO_PROXY: "${BUILD_NO_PROXY:-localhost,127.0.0.1,::1}"
+    container_name: cisco_api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=attendance
+      - DB_USER=admin
+      - DB_PASS=${DB_PASS:?Set DB_PASS in flask_api/.env}
+      - REDIS_HOST=cache
+      - ADMIN_KEY=${ADMIN_KEY:?Set ADMIN_KEY in flask_api/.env}
+      - ALLOWED_SUBNETS=${ALLOWED_SUBNETS:-192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,127.0.0.1/32,::1/128}
+      - TRUST_PROXY_HEADERS=${TRUST_PROXY_HEADERS:-false}
+      - TRUSTED_PROXY_SUBNETS=${TRUSTED_PROXY_SUBNETS:-127.0.0.1/32,::1/128}
+    networks:
+      - backend_net
+
+  # Idempotency Cache
+  cache:
+    image: redis:7-alpine
+    container_name: cisco_redis
+    restart: unless-stopped
+    networks:
+      - backend_net
+
+  # Source of Truth
+  db:
+    image: postgres:15-alpine
+    container_name: cisco_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=attendance
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=${DB_PASS:?Set DB_PASS in flask_api/.env}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend_net
+
+volumes:
+  pg_data:
+
+networks:
+  backend_net:
+    driver: bridge

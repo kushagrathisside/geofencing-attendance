@@ -56,8 +56,9 @@ if [ ! -d "$FLASK_DIR/venv" ]; then
     python3 -m venv "$FLASK_DIR/venv"
 fi
 log "Installing Flask dependencies..."
-"$FLASK_DIR/venv/bin/pip" install --upgrade pip -q
-"$FLASK_DIR/venv/bin/pip" install flask flask-cors geopy -q
+"$FLASK_DIR/venv/bin/python" -m ensurepip --upgrade >/dev/null
+"$FLASK_DIR/venv/bin/python" -m pip install --upgrade pip -q
+"$FLASK_DIR/venv/bin/python" -m pip install -r "$FLASK_DIR/requirements.txt" -q
 ok "Flask ready."
 
 # -----------------------------------------------------------------------------
@@ -89,9 +90,10 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║        Setup complete! ✓                 ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════╝${NC}"
 echo ""
-echo "  1. Edit  flutter_app/lib/config.dart   ← set kBaseUrl + kAdminKey"
-echo "  2. Run:  bash run_flask.sh             ← Terminal 1"
-echo "  3. Run:  bash run_flutter.sh           ← Terminal 2  (Linux desktop)"
-echo "  4. Run:  bash run_mobile.sh            ← Terminal 2  (Android phone)"
+echo "  1. Copy: cp flask_api/.env.example flask_api/.env"
+echo "  2. Edit flask_api/.env with real ADMIN_KEY and DB_PASS values"
+echo "  3. Run backend: cd flask_api && docker-compose up --build"
+echo "  4. Run web app: bash run_flutter.sh web"
+echo "  5. Android is optional: regenerate the Android platform before APK builds"
 echo ""
 echo "  source ~/.bashrc   ← apply PATH in current terminal"

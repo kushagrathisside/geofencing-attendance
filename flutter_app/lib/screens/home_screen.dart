@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.45),
+                      color: Colors.white.withValues(alpha: 0.45),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -56,7 +56,8 @@ class HomeScreen extends StatelessWidget {
                   _RoleCard(
                     icon: Icons.cast_for_education_rounded,
                     title: 'Instructor',
-                    subtitle: 'Create sessions, share QR codes, export attendance.',
+                    subtitle:
+                        'Create sessions, share QR codes, export attendance.',
                     onTap: () => Navigator.pushNamed(context, '/instructor'),
                   ),
                   const SizedBox(height: 16),
@@ -65,7 +66,8 @@ class HomeScreen extends StatelessWidget {
                   _RoleCard(
                     icon: Icons.person_rounded,
                     title: 'Student',
-                    subtitle: 'Scan the QR code your instructor shared to mark attendance.',
+                    subtitle:
+                        'Scan the QR code your instructor shared to mark attendance.',
                     onTap: () {
                       // Students always arrive via QR link → /attend/<id>
                       // This button is just a fallback for direct app open.
@@ -143,7 +145,7 @@ class _RoleCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF7C6AF7).withOpacity(0.15),
+                  color: const Color(0xFF7C6AF7).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: const Color(0xFF7C6AF7), size: 24),
@@ -162,7 +164,7 @@ class _RoleCard extends StatelessWidget {
                     Text(subtitle,
                         style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withOpacity(0.45))),
+                            color: Colors.white.withValues(alpha: 0.45))),
                   ],
                 ),
               ),

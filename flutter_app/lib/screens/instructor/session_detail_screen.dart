@@ -4,14 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-//import 'package:url_launcher/url_launcher.dart';
 import '../../config.dart';
 import '../../models/session.dart';
 import '../../models/attendance_record.dart';
 import '../../services/api_service.dart';
-import 'dart:io';
-import 'package:http/io_client.dart';
-import '../../config.dart';
+import '../../services/csv_exporter.dart';
 
 class SessionDetailScreen extends StatefulWidget {
   final Session session;
@@ -34,16 +31,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     _loadRecords();
   }
 
-  String get _link => '$kBaseUrl/attend/${_session.id}';
+  String get _link => '$kAppBaseUrl/attend/${_session.id}';
 
   Future<void> _loadRecords() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final data = await ApiService.getRecords(_session.id);
       final list = (data['records'] as List)
           .map((j) => AttendanceRecord.fromJson(j as Map<String, dynamic>))
           .toList();
-      setState(() { _records = list; });
+      setState(() {
+        _records = list;
+      });
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -71,9 +73,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF18181C),
         title: const Text('Reset Records'),
-        content: const Text('This will permanently delete all attendance records for this session. Continue?'),
+        content: const Text(
+            'This will permanently delete all attendance records for this session. Continue?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(context, true),
@@ -94,20 +99,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   Future<void> _export() async {
     try {
-      final uri = Uri.parse(ApiService.exportUrl(_session.id));
-      final response = await IOClient(
-        HttpClient()..badCertificateCallback = (cert, host, port) => true,
-      ).get(uri, headers: {'X-Admin-Key': kAdminKey}).timeout(kTimeout);
-
-      if (response.statusCode == 200) {
-        final home = Platform.environment['HOME'] ?? '.';
-        final path = '$home/Desktop/${_session.id}-attendance.csv';
-        final file = File(path);
-        await file.writeAsString(response.body);
-        _snack('Saved to Desktop/${_session.id}-attendance.csv');
-      } else {
-        _snack('Export failed: ${response.statusCode}', error: true);
-      }
+      final csv = await ApiService.exportCsv(_session.id);
+      final message = await saveCsvFile('${_session.id}-attendance.csv', csv);
+      _snack(message);
     } catch (e) {
       _snack('Export error: $e', error: true);
     }
@@ -132,7 +126,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         title: Text(_session.courseName,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadRecords),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadRecords),
         ],
       ),
       body: RefreshIndicator(
@@ -145,10 +140,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Row(children: [
-                  Text('${_records.length} Record${_records.length == 1 ? '' : 's'}',
-                      style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+                  Text(
+                      '${_records.length} Record${_records.length == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, color: Colors.white)),
                   const Spacer(),
-                  if (_loading) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  if (_loading)
+                    const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2)),
                 ]),
               ),
             ),
@@ -156,7 +157,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                  child: Text(_error!,
+                      style: const TextStyle(color: Colors.redAccent)),
                 ),
               ),
             if (_records.isEmpty && !_loading)
@@ -165,7 +167,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   padding: const EdgeInsets.all(32),
                   child: Text('No submissions yet.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white.withOpacity(0.35))),
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.35))),
                 ),
               ),
             SliverList(
@@ -194,18 +197,26 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.all(8),
-            child: QrImageView(data: _link, size: 120, version: QrVersions.auto),
+            child:
+                QrImageView(data: _link, size: 120, version: QrVersions.auto),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 _session.id,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF7C6AF7)),
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF7C6AF7)),
               ),
               const SizedBox(height: 4),
               Text(_session.createdAt.substring(0, 16),
-                  style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.4))),
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.4))),
               const SizedBox(height: 12),
               _StatusBadge(active: _session.isActive),
               const SizedBox(height: 12),
@@ -216,18 +227,23 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                   _snack('Link copied!');
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.copy_rounded, size: 13, color: Color(0xFF7C6AF7)),
+                    const Icon(Icons.copy_rounded,
+                        size: 13, color: Color(0xFF7C6AF7)),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(_link,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.white70)),
+                          style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 10,
+                              color: Colors.white70)),
                     ),
                   ]),
                 ),
@@ -254,10 +270,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           onTap: _export,
         ),
         _ActionChip(
-          icon: _session.isActive ? Icons.lock_rounded : Icons.lock_open_rounded,
+          icon:
+              _session.isActive ? Icons.lock_rounded : Icons.lock_open_rounded,
           label: _session.isActive ? 'Close Session' : 'Reopen Session',
           onTap: _toggleSession,
-          color: _session.isActive ? Colors.orangeAccent : const Color(0xFF4ADE80),
+          color:
+              _session.isActive ? Colors.orangeAccent : const Color(0xFF4ADE80),
         ),
         _ActionChip(
           icon: Icons.delete_sweep_rounded,
@@ -280,11 +298,13 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: active
-            ? const Color(0xFF4ADE80).withOpacity(0.1)
-            : Colors.white.withOpacity(0.06),
+            ? const Color(0xFF4ADE80).withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: active ? const Color(0xFF4ADE80).withOpacity(0.4) : Colors.white12,
+          color: active
+              ? const Color(0xFF4ADE80).withValues(alpha: 0.4)
+              : Colors.white12,
         ),
       ),
       child: Text(
@@ -304,7 +324,11 @@ class _ActionChip extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Color? color;
-  const _ActionChip({required this.icon, required this.label, required this.onTap, this.color});
+  const _ActionChip(
+      {required this.icon,
+      required this.label,
+      required this.onTap,
+      this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -315,14 +339,16 @@ class _ActionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: c.withOpacity(0.08),
+          color: c.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: c.withOpacity(0.2)),
+          border: Border.all(color: c.withValues(alpha: 0.2)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, size: 14, color: c),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12, color: c, fontWeight: FontWeight.w500)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12, color: c, fontWeight: FontWeight.w500)),
         ]),
       ),
     );
@@ -344,20 +370,42 @@ class _RecordTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(children: [
-        Text('$index', style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.white.withOpacity(0.25), fontWeight: FontWeight.w600)),
+        Text('$index',
+            style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.25),
+                fontWeight: FontWeight.w600)),
         const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(record.name, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14)),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(record.name,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 14)),
           const SizedBox(height: 2),
-          Text(record.rollNo, style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Color(0xFF7C6AF7))),
+          Text(record.rollNo,
+              style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: Color(0xFF7C6AF7))),
           if (record.comments.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text(record.comments, style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.4))),
+            Text(record.comments,
+                style: TextStyle(
+                    fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
           ],
         ])),
         Text(
-          record.submittedAt.length > 16 ? record.submittedAt.substring(11, 16) : '',
-          style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.white.withOpacity(0.3)),
+          record.submittedAt.length > 16
+              ? record.submittedAt.substring(11, 16)
+              : '',
+          style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 11,
+              color: Colors.white.withValues(alpha: 0.3)),
         ),
       ]),
     );

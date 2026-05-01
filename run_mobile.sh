@@ -54,16 +54,28 @@ run_usb() {
     echo -e "${GREEN}Using device: $DEVICE${NC}"
     echo ""
 
+    if [ ! -d "$FLUTTER_DIR/android" ]; then
+        echo -e "${RED}Android platform files are missing.${NC}"
+        echo "Run this before using mobile mode: cd flutter_app && flutter create . --platforms android"
+        exit 1
+    fi
+
     # Get phone's IP for Flask (phone needs to reach your machine)
     HOST_IP=$(hostname -I | awk '{print $1}')
+    API_BASE_URL="${API_BASE_URL:-http://$HOST_IP:5000}"
+    APP_BASE_URL="${APP_BASE_URL:-http://$HOST_IP:8080}"
+    ADMIN_KEY="${ADMIN_KEY:-dev-admin-key}"
     echo -e "${YELLOW}NOTE:${NC} Your machine's IP is ${GREEN}$HOST_IP${NC}"
-    echo "Make sure config.dart has:"
-    echo "  const String kBaseUrl = \"http://$HOST_IP:8080\";"
+    echo "Using API_BASE_URL=$API_BASE_URL"
+    echo "Using APP_BASE_URL=$APP_BASE_URL"
     echo ""
     read -p "Press Enter when ready to build and run..."
 
     cd "$FLUTTER_DIR"
-    flutter run -d "$DEVICE"
+    flutter run -d "$DEVICE" \
+        --dart-define=API_BASE_URL="$API_BASE_URL" \
+        --dart-define=APP_BASE_URL="$APP_BASE_URL" \
+        --dart-define=ADMIN_KEY="$ADMIN_KEY"
 }
 
 # ---------------------------------------------------------------------------
@@ -80,7 +92,7 @@ pair_wifi() {
     read -p "Enter the 6-digit pairing code: " PAIR_CODE
 
     echo ""
-    log "Pairing..."
+    echo -e "${CYAN}Pairing...${NC}"
     adb pair "$PAIR_ADDR" "$PAIR_CODE"
     echo -e "${GREEN}Paired! Now run:  bash run_mobile.sh wifi${NC}"
 }
@@ -108,15 +120,27 @@ run_wifi() {
     echo -e "${GREEN}Connected: $DEVICE${NC}"
     echo ""
 
+    if [ ! -d "$FLUTTER_DIR/android" ]; then
+        echo -e "${RED}Android platform files are missing.${NC}"
+        echo "Run this before using mobile mode: cd flutter_app && flutter create . --platforms android"
+        exit 1
+    fi
+
     HOST_IP=$(hostname -I | awk '{print $1}')
+    API_BASE_URL="${API_BASE_URL:-http://$HOST_IP:5000}"
+    APP_BASE_URL="${APP_BASE_URL:-http://$HOST_IP:8080}"
+    ADMIN_KEY="${ADMIN_KEY:-dev-admin-key}"
     echo -e "${YELLOW}NOTE:${NC} Your machine's IP is ${GREEN}$HOST_IP${NC}"
-    echo "Make sure config.dart has:"
-    echo "  const String kBaseUrl = \"http://$HOST_IP:8080\";"
+    echo "Using API_BASE_URL=$API_BASE_URL"
+    echo "Using APP_BASE_URL=$APP_BASE_URL"
     echo ""
     read -p "Press Enter when ready..."
 
     cd "$FLUTTER_DIR"
-    flutter run -d "$DEVICE"
+    flutter run -d "$DEVICE" \
+        --dart-define=API_BASE_URL="$API_BASE_URL" \
+        --dart-define=APP_BASE_URL="$APP_BASE_URL" \
+        --dart-define=ADMIN_KEY="$ADMIN_KEY"
 }
 
 # ---------------------------------------------------------------------------

@@ -17,16 +17,22 @@ fi
 source "$FLASK_DIR/venv/bin/activate"
 
 # Default env vars (override by setting them before running this script)
-export ADMIN_KEY="${ADMIN_KEY:-supersecret}"
-export APP_BASE_URL="${APP_BASE_URL:-http://localhost:8080}"
-export DEBUG="${DEBUG:-true}"
-export PORT="${PORT:-8080}"
+export ADMIN_KEY="${ADMIN_KEY:-dev-admin-key}"
+export DB_HOST="${DB_HOST:-localhost}"
+export DB_NAME="${DB_NAME:-attendance}"
+export DB_USER="${DB_USER:-admin}"
+export DB_PASS="${DB_PASS:-dev-db-password}"
+export REDIS_HOST="${REDIS_HOST:-localhost}"
+export ALLOWED_SUBNETS="${ALLOWED_SUBNETS:-127.0.0.1/32,::1/128,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12}"
+export TRUST_PROXY_HEADERS="${TRUST_PROXY_HEADERS:-false}"
+export TRUSTED_PROXY_SUBNETS="${TRUSTED_PROXY_SUBNETS:-127.0.0.1/32,::1/128}"
+export PORT="${PORT:-5000}"
 
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Flask API starting...${NC}"
 echo -e "  URL      : http://0.0.0.0:$PORT"
-echo -e "  Admin key: $ADMIN_KEY"
-echo -e "  DB       : $FLASK_DIR/attendance.db"
+echo -e "  DB       : PostgreSQL $DB_USER@$DB_HOST/$DB_NAME"
+echo -e "  Redis    : $REDIS_HOST:6379"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 

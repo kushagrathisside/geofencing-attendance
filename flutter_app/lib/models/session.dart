@@ -19,13 +19,22 @@ class Session {
     this.geoRadius = 100,
   });
 
-  factory Session.fromJson(Map<String, dynamic> j) => Session(
-        id: j['id'] as String,
-        courseName: j['course_name'] as String,
-        createdAt: j['created_at'] as String,
-        isActive: (j['is_active'] as int) == 1,
-        geoLat: (j['geo_lat'] as num?)?.toDouble(),
-        geoLon: (j['geo_lon'] as num?)?.toDouble(),
-        geoRadius: (j['geo_radius'] as num?)?.toDouble() ?? 100,
-      );
+  factory Session.fromJson(Map<String, dynamic> j) {
+    final rawActive = j['is_active'];
+    final isActive = rawActive is bool
+        ? rawActive
+        : rawActive is num
+            ? rawActive != 0
+            : rawActive.toString().toLowerCase() == 'true';
+
+    return Session(
+      id: (j['id'] ?? j['session_id']) as String,
+      courseName: j['course_name'] as String,
+      createdAt: (j['created_at'] ?? '') as String,
+      isActive: isActive,
+      geoLat: (j['geo_lat'] as num?)?.toDouble(),
+      geoLon: (j['geo_lon'] as num?)?.toDouble(),
+      geoRadius: (j['geo_radius'] as num?)?.toDouble() ?? 100,
+    );
+  }
 }

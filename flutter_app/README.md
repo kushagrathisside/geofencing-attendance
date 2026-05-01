@@ -1,17 +1,33 @@
-# attendance_app
+# Attendance Flutter Client
 
-A new Flutter project.
+Flutter client for the attendance system. The supported primary target is web.
 
-## Getting Started
+## Run Web
 
-This project is a starting point for a Flutter application.
+From the repository root:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+ADMIN_KEY=<backend-admin-key> \
+API_BASE_URL=http://127.0.0.1:5000 \
+APP_BASE_URL=http://localhost:8080 \
+bash run_flutter.sh web
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Validate
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter analyze
+flutter test
+flutter build web --no-pub
+```
+
+## Configuration
+
+Runtime configuration comes from `--dart-define`:
+
+- `API_BASE_URL`: Flask API origin.
+- `APP_BASE_URL`: Flutter web origin used in QR links.
+- `ADMIN_KEY`: shared admin key for instructor actions.
+
+Android is optional future scope until the Android platform directory is
+regenerated and validated.

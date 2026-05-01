@@ -4,12 +4,9 @@
 // Throws ApiException on non-2xx responses so callers can show friendly errors.
 
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
 import '../config.dart';
 import '../models/session.dart';
-import '../models/attendance_record.dart';
 
 // ---------------------------------------------------------------------------
 // Custom exception
@@ -18,7 +15,8 @@ import '../models/attendance_record.dart';
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
-  const ApiException(this.message, {this.statusCode});
+  final String? code;
+  const ApiException(this.message, {this.statusCode, this.code});
 
   @override
   String toString() => message;
@@ -29,10 +27,7 @@ class ApiException implements Exception {
 // ---------------------------------------------------------------------------
 
 class ApiService {
-  // Accepts self-signed SSL certificates (needed for local HTTPS with pyopenssl)
-  static final _client = IOClient(
-    HttpClient()..badCertificateCallback = (cert, host, port) => true,
-  );
+  static final _client = http.Client();
 
   static Map<String, String> get _adminHeaders => {
         'Content-Type': 'application/json',
@@ -45,16 +40,44 @@ class ApiService {
 
   // ---- helpers ----
 
-  static Map<String, dynamic> _parse(http.Response res) {
-    final body = jsonDecode(res.body);
+  static dynamic _decode(http.Response res) {
+    if (res.body.isEmpty) return <String, dynamic>{};
+    try {
+      return jsonDecode(res.body);
+    } catch (_) {
+      return res.body;
+    }
+  }
+
+  static Never _throwForResponse(http.Response res, dynamic body) {
+    if (body is Map) {
+      final msg = body['message'] ?? body['error'] ?? 'Unknown error';
+      throw ApiException(
+        msg.toString(),
+        statusCode: res.statusCode,
+        code: body['code']?.toString(),
+      );
+    }
+    throw ApiException(body.toString(), statusCode: res.statusCode);
+  }
+
+  static Map<String, dynamic> _parseMap(http.Response res) {
+    final body = _decode(res);
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return body as Map<String, dynamic>;
     }
-    final msg = (body as Map)['message'] ?? body['error'] ?? 'Unknown error';
-    throw ApiException(msg.toString(), statusCode: res.statusCode);
+    _throwForResponse(res, body);
   }
 
-  static Uri _uri(String path) => Uri.parse('$kBaseUrl$path');
+  static List<dynamic> _parseList(http.Response res) {
+    final body = _decode(res);
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return body as List<dynamic>;
+    }
+    _throwForResponse(res, body);
+  }
+
+  static Uri _uri(String path) => Uri.parse('$kApiBaseUrl$path');
 
   // -------------------------------------------------------------------------
   // Instructor — session management
@@ -79,7 +102,7 @@ class ApiService {
           }),
         )
         .timeout(kTimeout);
-    return _parse(res);
+    return _parseMap(res);
   }
 
   /// List all sessions (instructor dashboard).
@@ -87,7 +110,7 @@ class ApiService {
     final res = await _client
         .get(_uri('/sessions'), headers: _adminHeaders)
         .timeout(kTimeout);
-    final list = jsonDecode(res.body) as List;
+    final list = _parseList(res);
     return list
         .map((j) => Session.fromJson(j as Map<String, dynamic>))
         .toList();
@@ -98,7 +121,7 @@ class ApiService {
     final res = await _client
         .post(_uri('/session/$sessionId/close'), headers: _adminHeaders)
         .timeout(kTimeout);
-    _parse(res);
+    _parseMap(res);
   }
 
   /// Re-open a closed session.
@@ -106,7 +129,7 @@ class ApiService {
     final res = await _client
         .post(_uri('/session/$sessionId/open'), headers: _adminHeaders)
         .timeout(kTimeout);
-    _parse(res);
+    _parseMap(res);
   }
 
   /// Delete all records for a session (keep session itself).
@@ -114,7 +137,7 @@ class ApiService {
     final res = await _client
         .post(_uri('/session/$sessionId/reset'), headers: _adminHeaders)
         .timeout(kTimeout);
-    _parse(res);
+    _parseMap(res);
   }
 
   /// Get records + session info for a session.
@@ -122,12 +145,23 @@ class ApiService {
     final res = await _client
         .get(_uri('/session/$sessionId/records'), headers: _adminHeaders)
         .timeout(kTimeout);
-    return _parse(res);
+    return _parseMap(res);
   }
 
   /// Returns the export URL (open in browser / share).
   static String exportUrl(String sessionId) =>
-      '$kBaseUrl/session/$sessionId/export';
+      '$kApiBaseUrl/session/$sessionId/export';
+
+  /// Download CSV contents using admin headers.
+  static Future<String> exportCsv(String sessionId) async {
+    final res = await _client
+        .get(_uri('/session/$sessionId/export'), headers: _adminHeaders)
+        .timeout(kTimeout);
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return res.body;
+    }
+    _throwForResponse(res, _decode(res));
+  }
 
   // -------------------------------------------------------------------------
   // Public — student
@@ -138,11 +172,12 @@ class ApiService {
     final res = await _client
         .get(_uri('/session/$sessionId'), headers: _publicHeaders)
         .timeout(kTimeout);
-    return Session.fromJson(_parse(res));
+    return Session.fromJson(_parseMap(res));
   }
 
-  /// Submit attendance. Throws ApiException with error key for
-  /// 'duplicate' and 'outside_geofence' so UI can show specific messages.
+  /// Submit attendance. Throws ApiException on non-2xx responses. The backend
+  /// may include structured ApiException.code values such as 'duplicate',
+  /// 'outside_geofence', or 'session_closed'.
   static Future<void> submitAttendance({
     required String sessionId,
     required String name,
@@ -166,6 +201,6 @@ class ApiService {
           }),
         )
         .timeout(kTimeout);
-    _parse(res);
+    _parseMap(res);
   }
 }
