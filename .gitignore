@@ -1,0 +1,52 @@
+# =====================
+
+# Secrets
+
+# =====================
+
+.env
+
+# =====================
+
+# Python
+
+# =====================
+
+flask_api/venv/
+**pycache**/
+*.pyc
+*.pyo
+
+# =====================
+
+# Database / Data
+
+# =====================
+
+*.db
+*.csv
+
+# =====================
+
+# Flutter
+
+# =====================
+
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+
+# Logs
+
+*.log
+
+# IDE
+
+*.iml
+*.code-workspace
+
+# OS
+
+.DS_Store
+Thumbs.db
