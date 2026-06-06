@@ -1,52 +1,71 @@
 # =====================
-
 # Secrets
-
 # =====================
 
 .env
+.env.local
 
 # =====================
-
 # Python
-
 # =====================
 
 flask_api/venv/
-**pycache**/
-*.pyc
-*.pyo
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 
 # =====================
-
 # Database / Data
-
 # =====================
 
 *.db
 *.csv
+attendance.csv
 
 # =====================
-
 # Flutter
-
 # =====================
 
 flutter_app/build/
 flutter_app/.dart_tool/
 flutter_app/.flutter-plugins
 flutter_app/.flutter-plugins-dependencies
+flutter_app/.metadata
+pubspec.lock
 
+# =====================
 # Logs
+# =====================
 
 *.log
+flutter_*.log
 
+# =====================
 # IDE
+# =====================
 
 *.iml
 *.code-workspace
+.idea/
+.vscode/
 
+# =====================
+# Merge Artifacts
+# =====================
+
+*.orig
+*.rej
+
+# =====================
+# Local Scripts
+# =====================
+
+create_docs.py
+
+# =====================
 # OS
+# =====================
 
 .DS_Store
 Thumbs.db
